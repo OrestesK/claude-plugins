@@ -1,0 +1,11 @@
+{
+  "name": "mason-lsp",
+  "description": "Auto-sync Neovim Mason LSP servers and tools for Claude Code",
+  "version": "0.1.0",
+  "author": {
+    "name": "OrestesK"
+  },
+  "repository": "https://github.com/OrestesK/claude-plugins",
+  "license": "MIT",
+  "keywords": ["mason", "neovim", "lsp", "language-server", "nvim"]
+}

@@ -1,0 +1,9 @@
+{
+  "gopls": ["serve"],
+  "bash-language-server": ["start"],
+  "solargraph": ["stdio"],
+  "terraform-ls": ["serve"],
+  "marksman": ["server"],
+  "taplo": ["lsp", "stdio"],
+  "lua-language-server": []
+}

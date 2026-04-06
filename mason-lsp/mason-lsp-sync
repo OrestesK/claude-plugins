@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+command -v jq >/dev/null || {
+  echo "mason-lsp: jq is required but not installed" >&2
+  exit 1
+}
+
+MASON_DIR="${MASON_DIR:-$HOME/.local/share/nvim/mason}"
+PLUGIN_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+REGISTRY="$MASON_DIR/registries/github/mason-org/mason-registry/registry.json"
+LANG_EXT="$PLUGIN_DIR/lang-extensions.json"
+LSP_ARGS="$PLUGIN_DIR/lsp-args.json"
+OUTPUT="$PLUGIN_DIR/.lsp.json"
+
+if [[ ! -d "$MASON_DIR" ]]; then
+  echo "mason-lsp: mason directory not found at $MASON_DIR" >&2
+  echo '{}' > "$OUTPUT"
+  exit 0
+fi
+
+if [[ ! -f "$REGISTRY" ]]; then
+  echo "mason-lsp: mason registry not found at $REGISTRY" >&2
+  echo '{}' > "$OUTPUT"
+  exit 0
+fi
+
+# Build LSP config
+lsp_json='{}'
+
+for pkg_dir in "$MASON_DIR"/packages/*/; do
+  [[ -d "$pkg_dir" ]] || continue
+  pkg_name="$(basename "$pkg_dir")"
+
+  # Look up in registry
+  entry=$(jq -e --arg name "$pkg_name" '.[] | select(.name == $name)' "$REGISTRY" 2>/dev/null) || continue
+
+  # Check if it's an LSP
+  is_lsp=$(echo "$entry" | jq -r '.categories // [] | map(select(. == "LSP")) | length')
+  [[ "$is_lsp" -gt 0 ]] || continue
+
+  # Select the best binary name from the bin object
+  # Prefer keys containing "langserver" or "language-server" or "lsp"
+  bin_cmd=$(echo "$entry" | jq -r '
+    .bin // {} | keys[] as $k |
+    if ($k | test("langserver|language-server"; "i")) then $k
+    else empty end
+  ' | head -1)
+
+  if [[ -z "$bin_cmd" ]]; then
+    bin_cmd=$(echo "$entry" | jq -r '.bin // {} | keys[0] // empty')
+  fi
+
+  [[ -n "$bin_cmd" ]] || continue
+
+  # Get languages
+  languages=$(echo "$entry" | jq -r '.languages // [] | .[]')
+  [[ -n "$languages" ]] || continue
+
+  # Get args override or default to ["--stdio"]
+  args=$(jq -e --arg cmd "$bin_cmd" '.[$cmd]' "$LSP_ARGS" 2>/dev/null) || args='["--stdio"]'
+
+  # Build extensionToLanguage from all languages
+  ext_map='{}'
+  while IFS= read -r lang; do
+    lang_exts=$(jq -e --arg lang "$lang" '.[$lang] // empty' "$LANG_EXT" 2>/dev/null) || {
+      echo "mason-lsp: unknown language '$lang' for package '$pkg_name', skipping" >&2
+      continue
+    }
+    ext_map=$(echo "$ext_map" | jq --argjson new "$lang_exts" '. + $new')
+  done <<< "$languages"
+
+  # Skip if no extensions were mapped
+  [[ $(echo "$ext_map" | jq 'length') -gt 0 ]] || continue
+
+  # Use the first language name (lowercased) as the key
+  first_lang=$(echo "$languages" | head -1)
+  lsp_key=$(echo "$first_lang" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+
+  # Deduplicate: don't overwrite entries with dedicated LSP binaries (langserver/language-server)
+  if [[ $(echo "$lsp_json" | jq --arg key "$lsp_key" 'has($key)') == "true" ]]; then
+    existing_cmd=$(echo "$lsp_json" | jq -r --arg key "$lsp_key" '.[$key].command')
+    if [[ "$existing_cmd" =~ (langserver|language-server) ]]; then
+      continue
+    fi
+  fi
+
+  # Build the server entry
+  server_entry=$(jq -n \
+    --arg cmd "$bin_cmd" \
+    --argjson args "$args" \
+    --argjson ext "$ext_map" \
+    '{command: $cmd, args: $args, extensionToLanguage: $ext, maxRestarts: 3}')
+
+  # Omit args key if empty array
+  if [[ $(echo "$server_entry" | jq '.args | length') -eq 0 ]]; then
+    server_entry=$(echo "$server_entry" | jq 'del(.args)')
+  fi
+
+  lsp_json=$(echo "$lsp_json" | jq --arg key "$lsp_key" --argjson val "$server_entry" '.[$key] = $val')
+done
+
+new_json=$(echo "$lsp_json" | jq '.')
+
+path_warn=""
+if [[ ":$PATH:" != *":$MASON_DIR/bin:"* ]]; then
+  path_warn=" [WARNING: $MASON_DIR/bin not in PATH]"
+fi
+
+# Compare with existing config
+old_json='{}'
+[[ -f "$OUTPUT" ]] && old_json=$(cat "$OUTPUT")
+
+lsp_count=$(echo "$new_json" | jq 'length')
+
+if [[ "$new_json" == "$old_json" ]]; then
+  echo "mason-lsp: $lsp_count LSP servers, no changes$path_warn" >&2
+else
+  echo "$new_json" > "$OUTPUT"
+
+  # Show what changed
+  added=$(comm -13 <(echo "$old_json" | jq -r 'keys[]' | sort) <(echo "$new_json" | jq -r 'keys[]' | sort))
+  removed=$(comm -23 <(echo "$old_json" | jq -r 'keys[]' | sort) <(echo "$new_json" | jq -r 'keys[]' | sort))
+
+  lsp_cmds=$(echo "$new_json" | jq -r '[.[].command] | join(", ")')
+  msg="mason-lsp: synced $lsp_count LSP servers ($lsp_cmds)"
+  [[ -n "$added" ]] && msg="$msg [+$(echo "$added" | tr '\n' ',' | sed 's/,$//')]"
+  [[ -n "$removed" ]] && msg="$msg [-$(echo "$removed" | tr '\n' ',' | sed 's/,$//')]"
+  echo "$msg$path_warn" >&2
+fi

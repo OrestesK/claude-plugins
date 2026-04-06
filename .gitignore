@@ -1,0 +1,5 @@
+mason-lsp/.lsp.json
+.DS_Store
+*.swp
+*.swo
+*~

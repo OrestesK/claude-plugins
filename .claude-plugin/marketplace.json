@@ -1,0 +1,20 @@
+{
+  "name": "orestesk-plugins",
+  "description": "Claude Code plugins by OrestesK",
+  "owner": {
+    "name": "OrestesK"
+  },
+  "plugins": [
+    {
+      "name": "mason-lsp",
+      "description": "Auto-sync Neovim Mason LSP servers and tools for Claude Code",
+      "version": "0.1.0",
+      "source": "./mason-lsp",
+      "category": "development",
+      "tags": ["mason", "neovim", "lsp", "language-server", "nvim"],
+      "author": {
+        "name": "OrestesK"
+      }
+    }
+  ]
+}

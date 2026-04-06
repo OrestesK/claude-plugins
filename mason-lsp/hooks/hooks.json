@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/mason-lsp-sync 2>&1 | tail -1"
+          }
+        ]
+      }
+    ]
+  }
+}

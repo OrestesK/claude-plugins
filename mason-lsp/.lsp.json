@@ -1,0 +1,37 @@
+{
+  "python": {
+    "command": "basedpyright-langserver",
+    "args": [
+      "--stdio"
+    ],
+    "extensionToLanguage": {
+      ".py": "python",
+      ".pyi": "python"
+    },
+    "maxRestarts": 3
+  },
+  "lua": {
+    "command": "lua-language-server",
+    "extensionToLanguage": {
+      ".lua": "lua"
+    },
+    "maxRestarts": 3
+  },
+  "javascript": {
+    "command": "vtsls",
+    "args": [
+      "--stdio"
+    ],
+    "extensionToLanguage": {
+      ".js": "javascript",
+      ".jsx": "javascriptreact",
+      ".mjs": "javascript",
+      ".cjs": "javascript",
+      ".ts": "typescript",
+      ".tsx": "typescriptreact",
+      ".mts": "typescript",
+      ".cts": "typescript"
+    },
+    "maxRestarts": 3
+  }
+}
