@@ -87,6 +87,15 @@ pattern_replace(pattern: "var $N = $V", replacement: "const $N = $V", language: 
 
 See [ast-grep pattern syntax](https://ast-grep.github.io/guide/pattern-syntax.html) for full documentation.
 
+## Stronger enforcement (optional)
+
+The plugin includes a skill that guides Claude to prefer tree-sitter tools, but for maximum effect, add this to your project or global `CLAUDE.md`:
+
+```
+- Use tree-sitter MCP tools first for code navigation: search_symbols, document_symbols, symbol_definition, pattern_search. These are fast and always accurate.
+- Use LSP for semantic queries: findReferences, goToDefinition, hover. LSP diagnostics may be stale after edits.
+```
+
 ## Troubleshooting
 
 **ast-grep not installed** — the server requires ast-grep. Install with your package manager (see Requirements above).
