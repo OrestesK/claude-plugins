@@ -15,6 +15,17 @@
       "author": {
         "name": "OrestesK"
       }
+    },
+    {
+      "name": "tree-sitter",
+      "description": "AST-aware code intelligence via ast-grep for Claude Code",
+      "version": "0.1.0",
+      "source": "./tree-sitter",
+      "category": "development",
+      "tags": ["tree-sitter", "ast-grep", "code-intelligence", "symbols", "ast"],
+      "author": {
+        "name": "OrestesK"
+      }
     }
   ]
 }

@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if ! command -v ast-grep >/dev/null; then echo 'tree-sitter: ast-grep not installed (pacman -S ast-grep / brew install ast-grep / cargo install ast-grep)'; elif [ ! -d \"${CLAUDE_PLUGIN_ROOT}/server/node_modules\" ]; then cd \"${CLAUDE_PLUGIN_ROOT}/server\" && npm install --silent 2>&1 && echo 'tree-sitter: ready' || echo 'tree-sitter: npm install failed'; else echo 'tree-sitter: ready'; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

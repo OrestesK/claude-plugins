@@ -18,6 +18,7 @@ Then install individual plugins:
 | Plugin | Description |
 |--------|-------------|
 | [mason-lsp](./mason-lsp/) | Auto-sync Neovim Mason LSP servers and CLI tools for Claude Code |
+| [tree-sitter](./tree-sitter/) | AST-aware code intelligence via ast-grep for Claude Code |
 
 ## Requirements
 

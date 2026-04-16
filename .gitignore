@@ -3,3 +3,4 @@ mason-lsp/.lsp.json
 *.swp
 *.swo
 *~
+node_modules/

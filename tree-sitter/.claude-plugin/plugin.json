@@ -1,0 +1,11 @@
+{
+  "name": "tree-sitter",
+  "description": "AST-aware code intelligence via ast-grep for Claude Code",
+  "version": "0.1.0",
+  "author": {
+    "name": "OrestesK"
+  },
+  "repository": "https://github.com/OrestesK/claude-plugins",
+  "license": "MIT",
+  "keywords": ["tree-sitter", "ast-grep", "code-intelligence", "symbols", "ast"]
+}
